@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy-Focused YouTube Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .privacy-badge {
+            display: inline-block;
+            background: #27ae60;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .input-section {
+            padding: 40px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .url-input {
+            width: 70%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .url-input:focus {
+            border-color: #667eea;
+        }
+        
+        .submit-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: #764ba2;
+        }
+        
+        .video-container {
+            padding: 30px;
+            display: none;
+        }
+        
+        .video-info {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .video-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .video-author {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .embed-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            margin-bottom: 20px;
+        }
+        
+        .embed-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .privacy-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            display: none;
+            background: #ffeaa7;
+            color: #d63031;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #e17055;
+        }
+        
+        .examples {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .example-links {
+            margin-top: 15px;
+        }
+        
+        .example-link {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .example-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .url-input {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .submit-btn {
+                width: 100%;
+                margin-left: 0;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Privacy YouTube Viewer</h1>
+            <p>Watch YouTube videos with enhanced privacy protection</p>
+            <div class="privacy-badge">No-Cookie Domain • GDPR Friendly</div>
+        </div>
+        
+        <div class="input-section">
+            <input type="url" class="url-input" id="videoUrl" 
+                   placeholder="Paste any YouTube URL here...">
+            <button class="submit-btn" onclick="loadVideo()">Load Video</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading video with privacy protection...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="video-container" id="videoContainer">
+            <div class="video-info">
+                <h2 id="videoTitle" class="video-title"></h2>
+                <p id="videoAuthor" class="video-author"></p>
+            </div>
+            
+            <div class="embed-wrapper">
+                <iframe id="embedFrame" class="embed-iframe"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+            
+            <div class="privacy-info">
+                <h3>🔒 Privacy Protection Active</h3>
+                <p>This video is embedded using YouTube's <strong>no-cookie domain</strong> (youtube-nocookie.com). 
+                   YouTube won't store visitor data unless you actively play the video.</p>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <p>Try these example URLs:</p>
+            <div class="example-links">
+                <span class="example-link" onclick="setExample('https://www.youtube.com/watch?v=dQw4w9WgXcQ')">Example 1</span>
+                <span class="example-link" onclick="setExample('https://youtu.be/jNQXAC9IVRw')">Example 2</span>
+                <span class="example-link" onclick="setExample('https://www.youtube.com/embed/L_jWHffIx5E')">Example 3</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadVideo() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const videoContainer = document.getElementById('videoContainer');
+            
+            // Reset UI
+            error.style.display = 'none';
+            videoContainer.style.display = 'none';
+            loading.style.display = 'block';
+            
+            if (!url) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/embed', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.valid) {
+                    throw new Error(data.error || 'Invalid YouTube URL');
+                }
+                
+                displayVideo(data);
+                
+            } catch (err) {
+                showError('Error: ' + err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function displayVideo(data) {
+            // Set video information
+            document.getElementById('videoTitle').textContent = data.title;
+            document.getElementById('videoAuthor').textContent = `By: ${data.author_name}`;
+            
+            // Set embed URL
+            const embedFrame = document.getElementById('embedFrame');
+            embedFrame.src = data.embed_url;
+            
+            // Show video container
+            document.getElementById('videoContainer').style.display = 'block';
+            
+            // Scroll to video
+            document.getElementById('videoContainer').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function setExample(url) {
+            document.getElementById('videoUrl').value = url;
+            loadVideo();
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadVideo();
+            }
+        });
+        
+        // Example URLs for quick testing
+        const exampleUrls = [
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'https://youtu.be/jNQXAC9IVRw', 
+            'https://www.youtube.com/embed/L_jWHffIx5E'
+        ];
+    </script>
+</body>
+</html>
